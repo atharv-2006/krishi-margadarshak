@@ -1,0 +1,6 @@
+flask
+werkzeug
+requests
+python-dotenv
+pillow
+gunicorn

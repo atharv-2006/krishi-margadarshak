@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Welcome Banner -->
+<div class="alert alert-success text-center mt-3">
+    <h4>🎉 Welcome, {{ name }}!</h4>
+    <p>You are now logged in to Krishi Margadarshak.</p>
+</div>
+
+<!-- WEATHER WIDGET -->
+<div class="card shadow mb-4 p-3">
+    <div class="row align-items-center">
+
+        <!-- Weather Search -->
+        <div class="col-md-4 mb-3 mb-md-0">
+            <h5 class="text-success fw-bold mb-3">🌤️ Weather Update</h5>
+            <div class="input-group">
+                <input type="text"
+                       id="cityInput"
+                       class="form-control"
+                       placeholder="Enter city name..."
+                       value="Pune">
+                <button class="btn btn-success" onclick="getWeather()">
+                    Search
+                </button>
+            </div>
+        </div>
+
+        <!-- Weather Display -->
+        <div class="col-md-8">
+            <div id="weatherDisplay">
+                <div class="text-center text-muted">
+                    <p>🔍 Enter your city to see weather</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Dashboard Cards -->
+<div class="row mt-2">
+
+    <!-- Crop Recommendation Card -->
+    <div class="col-md-3 mb-4">
+        <div class="card shadow text-center p-3 h-100">
+            <div class="card-body">
+                <h2>🌱</h2>
+                <h5 class="card-title text-success">Crop Recommendation</h5>
+                <p class="card-text">Get the best crop for your soil and season.</p>
+                <a href="/crop" class="btn btn-success">Go</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Government Schemes Card -->
+    <div class="col-md-3 mb-4">
+        <div class="card shadow text-center p-3 h-100">
+            <div class="card-body">
+                <h2>🏛️</h2>
+                <h5 class="card-title text-success">Government Schemes</h5>
+                <p class="card-text">Learn about schemes and benefits for farmers.</p>
+                <a href="/schemes" class="btn btn-success">Go</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Problems & Solutions Card -->
+    <div class="col-md-3 mb-4">
+        <div class="card shadow text-center p-3 h-100">
+            <div class="card-body">
+                <h2>🔧</h2>
+                <h5 class="card-title text-success">Problems & Solutions</h5>
+                <p class="card-text">Find solutions to common farming problems.</p>
+                <a href="/problems" class="btn btn-success">Go</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Price Card -->
+    <div class="col-md-3 mb-4">
+        <div class="card shadow text-center p-3 h-100">
+            <div class="card-body">
+                <h2>📈</h2>
+                <h5 class="card-title text-success">Market Advisor</h5>
+                <p class="card-text">Get AI advice on best time and price to sell your crop.</p>
+                <a href="/market" class="btn btn-success">Go</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Detector Card -->
+    <div class="col-md-3 mb-4">
+        <div class="card shadow text-center p-3 h-100">
+            <div class="card-body">
+                <h2>🤖</h2>
+                <h5 class="card-title text-success">AI Crop Detector</h5>
+                <p class="card-text">Upload a crop photo and get AI-powered disease diagnosis.</p>
+                <a href="/ai-detector" class="btn btn-success">Go</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Logout Button -->
+<div class="text-center mt-3">
+    <a href="/logout" class="btn btn-outline-danger">🚪 Logout</a>
+</div>
+
+<!-- Weather JavaScript -->
+<script>
+function getWeather() {
+    const city = document.getElementById('cityInput').value;
+    const display = document.getElementById('weatherDisplay');
+
+    display.innerHTML = '<div class="text-center"><div class="spinner-border text-success"></div><p class="mt-2 text-muted">Fetching weather...</p></div>';
+
+    fetch('/weather?city=' + encodeURIComponent(city))
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const w = data.data;
+                display.innerHTML = `
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <img src="https://openweathermap.org/img/wn/${w.icon}@2x.png"
+                                 style="width:70px">
+                            <p class="fw-bold mb-0">${w.description}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h2 class="text-success fw-bold">${w.temp}°C</h2>
+                            <small class="text-muted">Feels like ${w.feels_like}°C</small><br>
+                            <small class="text-muted">Min: ${w.min_temp}° Max: ${w.max_temp}°</small>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1">💧 Humidity</p>
+                            <h5 class="text-success">${w.humidity}%</h5>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1">🌬️ Wind Speed</p>
+                            <h5 class="text-success">${w.wind_speed} km/h</h5>
+                        </div>
+                    </div>
+                    <p class="text-center text-muted mt-2 mb-0">
+                        📍 ${w.city}, ${w.country}
+                    </p>
+                `;
+            } else {
+                display.innerHTML = `<div class="alert alert-danger">❌ ${data.error} — please check the city name!</div>`;
+            }
+        })
+        .catch(err => {
+            display.innerHTML = '<div class="alert alert-danger">❌ Could not fetch weather. Check your internet!</div>';
+        });
+}
+
+// Auto load weather on page load
+window.onload = function() {
+    getWeather();
+}
+</script>
+
+{% endblock %}

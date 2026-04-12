@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow p-4 mt-4">
+
+            <h3 class="text-center text-success fw-bold mb-2">
+                🤖 AI Crop Disease Detector
+            </h3>
+            <p class="text-center text-muted mb-4">
+                Upload a clear photo of your crop and our AI will
+                detect the disease and recommend treatment!
+            </p>
+
+            <form method="POST" action="/ai-detector"
+                  enctype="multipart/form-data">
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">📸 Upload Crop Photo</label>
+                    <input type="file"
+                           name="crop_image"
+                           class="form-control"
+                           accept="image/*"
+                           required
+                           onchange="previewImage(this)">
+                    <div class="form-text">
+                        Best results with clear close-up photo of affected area.
+                        Supported: JPG, PNG, WEBP.
+                    </div>
+                </div>
+
+                <!-- Image Preview -->
+                <div id="imagePreview" class="text-center mb-3"
+                     style="display:none;">
+                    <img id="previewImg" src=""
+                         style="max-height:250px; border-radius:10px;"
+                         class="shadow">
+                    <p class="text-muted mt-2 small">Preview of your photo</p>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg"
+                            id="analyzeBtn">
+                        🔍 Analyze My Crop
+                    </button>
+                </div>
+
+            </form>
+
+            <div id="loading" class="text-center mt-4" style="display:none;">
+                <div class="spinner-border text-success" role="status"></div>
+                <p class="text-muted mt-2">
+                    🤖 AI is analyzing your crop... Please wait 10-20 seconds.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Results -->
+        {% if result %}
+
+            {% if result.status == 'error' %}
+            <div class="card shadow p-4 mt-4">
+                <div class="alert alert-danger">
+                    <h5>❌ Error</h5>
+                    <p class="mb-0">{{ result.message }}</p>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="/ai-detector" class="btn btn-success">
+                        🔄 Try Again
+                    </a>
+                </div>
+            </div>
+
+            {% elif result.status == 'success' %}
+            <div class="card shadow p-4 mt-4">
+                <h4 class="text-success fw-bold mb-4">
+                    🧠 AI Analysis Result
+                </h4>
+
+                <div class="alert alert-light border">
+                    <p style="white-space: pre-wrap; line-height: 1.8;">
+    {{ result.analysis | replace('**', '') | replace('*', '•') }}
+</p>
+                </div>
+
+                <p class="text-muted text-center small mt-2">
+                    Powered by NVIDIA NIM — Llama 4 Vision AI.
+                    Always confirm with your local agricultural officer.
+                    Kisan Helpline: 1800-180-1551
+                </p>
+
+                <div class="text-center mt-3">
+                    <a href="/ai-detector" class="btn btn-success me-2">
+                        📸 Analyze Another
+                    </a>
+                    <a href="/dashboard" class="btn btn-outline-success">
+                        🏠 Dashboard
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+document.querySelector('form').addEventListener('submit', function() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('analyzeBtn').textContent = '🤖 Analyzing...';
+});
+</script>
+
+{% endblock %}

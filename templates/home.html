@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<div class="hero-section text-center mb-5">
+    <h1 class="display-4 fw-bold text-success">🌾 Krishi Margadarshak</h1>
+    <p class="lead text-muted mt-2">Your Trusted Digital Agriculture Guide</p>
+    <p class="text-muted">
+        Helping Indian farmers with smart crop recommendations,
+        government scheme information, and farming solutions.
+    </p>
+    <div class="mt-4">
+        <a href="/signup" class="btn btn-success btn-lg me-3">
+            🚀 Get Started Free
+        </a>
+        <a href="/login" class="btn btn-outline-success btn-lg">
+            🔐 Login
+        </a>
+    </div>
+</div>
+
+<!-- FEATURES SECTION -->
+<h4 class="text-center text-success fw-bold mb-4">What We Offer</h4>
+
+<div class="row">
+
+    <div class="col-md-4 mb-4">
+        <div class="card text-center shadow p-3 h-100">
+            <div class="card-body">
+                <h2>🌱</h2>
+                <h5 class="card-title fw-bold">Crop Recommendation</h5>
+                <p class="card-text text-muted">
+                    Tell us your season and soil type.
+                    We suggest the best crop for you.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card text-center shadow p-3 h-100">
+            <div class="card-body">
+                <h2>🏛️</h2>
+                <h5 class="card-title fw-bold">Government Schemes</h5>
+                <p class="card-text text-muted">
+                    Know about PM-KISAN, Fasal Bima,
+                    KCC and other farmer benefits.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card text-center shadow p-3 h-100">
+            <div class="card-body">
+                <h2>🔧</h2>
+                <h5 class="card-title fw-bold">Problems & Solutions</h5>
+                <p class="card-text text-muted">
+                    Find quick solutions to pest attacks,
+                    drought, soil problems and more.
+                </p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- STATS SECTION -->
+<div class="row text-center mt-3 mb-5">
+    <div class="col-md-4">
+        <div class="card bg-success text-white shadow p-3">
+            <h3 class="fw-bold">9+</h3>
+            <p class="mb-0">Crop Recommendations</p>
+        </div>
+    </div>
+    <div class="col-md-4 mt-3 mt-md-0">
+        <div class="card bg-success text-white shadow p-3">
+            <h3 class="fw-bold">5+</h3>
+            <p class="mb-0">Government Schemes</p>
+        </div>
+    </div>
+    <div class="col-md-4 mt-3 mt-md-0">
+        <div class="card bg-success text-white shadow p-3">
+            <h3 class="fw-bold">5+</h3>
+            <p class="mb-0">Farming Solutions</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow p-4 mt-4">
+
+            <h3 class="text-center text-success fw-bold mb-2">
+                📈 AI Market Price Advisor
+            </h3>
+            <p class="text-center text-muted mb-4">
+                Get AI-powered advice on the best time and place to sell your crop!
+            </p>
+
+            <form method="POST" action="/market">
+
+                <!-- Crop Name -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">🌾 Crop Name</label>
+                    <select name="crop" class="form-select" required>
+                        <option value="">-- Select Crop --</option>
+                        <option value="Wheat">Wheat (गेहूं)</option>
+                        <option value="Rice">Rice (चावल)</option>
+                        <option value="Cotton">Cotton (कपास)</option>
+                        <option value="Sugarcane">Sugarcane (गन्ना)</option>
+                        <option value="Soybean">Soybean (सोयाबीन)</option>
+                        <option value="Onion">Onion (प्याज)</option>
+                        <option value="Tomato">Tomato (टमाटर)</option>
+                        <option value="Potato">Potato (आलू)</option>
+                        <option value="Maize">Maize (मक्का)</option>
+                        <option value="Groundnut">Groundnut (मूंगफली)</option>
+                        <option value="Mustard">Mustard (सरसों)</option>
+                        <option value="Turmeric">Turmeric (हल्दी)</option>
+                        <option value="Chilli">Chilli (मिर्च)</option>
+                        <option value="Banana">Banana (केला)</option>
+                        <option value="Mango">Mango (आम)</option>
+                    </select>
+                </div>
+
+                <!-- Quantity -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">⚖️ Quantity (in Quintals)</label>
+                    <input type="number"
+                           name="quantity"
+                           class="form-control"
+                           placeholder="e.g. 50"
+                           min="1"
+                           required>
+                    <div class="form-text">1 Quintal = 100 kg</div>
+                </div>
+
+                <!-- Location -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">📍 Your Location (District/State)</label>
+                    <input type="text"
+                           name="location"
+                           class="form-control"
+                           placeholder="e.g. Pune, Maharashtra"
+                           required>
+                </div>
+
+                <!-- Quality -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">⭐ Crop Quality</label>
+                    <select name="quality" class="form-select" required>
+                        <option value="">-- Select Quality --</option>
+                        <option value="Grade A (Excellent)">Grade A — Excellent quality</option>
+                        <option value="Grade B (Good)">Grade B — Good quality</option>
+                        <option value="Grade C (Average)">Grade C — Average quality</option>
+                        <option value="Mixed quality">Mixed quality</option>
+                    </select>
+                </div>
+
+                <!-- Harvest Date -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">📅 Harvest Date</label>
+                    <input type="date"
+                           name="harvest_date"
+                           class="form-control"
+                           required>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg"
+                            id="marketBtn">
+                        📈 Get Market Advice
+                    </button>
+                </div>
+
+            </form>
+
+            <div id="loading" class="text-center mt-4" style="display:none;">
+                <div class="spinner-border text-success" role="status"></div>
+                <p class="text-muted mt-2">
+                    🤖 AI is analyzing market conditions... Please wait.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Result -->
+        {% if result %}
+        <div class="card shadow p-4 mt-4">
+            <h4 class="text-success fw-bold mb-3">
+                📊 AI Market Analysis
+            </h4>
+
+            <div class="alert alert-light border">
+                <p style="white-space: pre-wrap; line-height: 1.8;">
+                    {{ result | replace('**', '') | replace('###', '') | replace('##', '') }}
+                </p>
+            </div>
+
+            <p class="text-muted text-center small mt-2">
+                ⚠️ This is AI-generated market advice based on general knowledge.
+                Always verify current prices at your local mandi or
+                <a href="https://agmarknet.gov.in" target="_blank">agmarknet.gov.in</a>
+                before selling.
+            </p>
+
+            <div class="text-center mt-3">
+                <a href="/market" class="btn btn-success me-2">
+                    🔄 Check Another Crop
+                </a>
+                <a href="/dashboard" class="btn btn-outline-success">
+                    🏠 Dashboard
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+document.querySelector('form').addEventListener('submit', function() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('marketBtn').disabled = true;
+    document.getElementById('marketBtn').textContent = '🤖 Analyzing...';
+});
+</script>
+
+{% endblock %}
