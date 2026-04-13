@@ -2,11 +2,14 @@ from PIL import Image
 import io
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+from flask_mail import Mail, Message
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import base64
 import json
 import requests as req
 import os
+import secrets
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,22 +17,36 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = 'krishi_secret_key_2024'
 
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_EMAIL')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_EMAIL')
+
+mail = Mail(app)
+reset_tokens = {}
+
 def get_db():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(
+        os.getenv('DATABASE_URL'),
+        cursor_factory=RealDictCursor
+    )
     return conn
 
 def create_tables():
     conn = get_db()
-    conn.execute('''
+    cur = conn.cursor()
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL
         )
     ''')
     conn.commit()
+    cur.close()
     conn.close()
 
 create_tables()
@@ -47,11 +64,13 @@ def signup():
         hashed_password = generate_password_hash(password)
         try:
             conn = get_db()
-            conn.execute(
-                'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+            cur = conn.cursor()
+            cur.execute(
+                'INSERT INTO users (name, email, password) VALUES (%s, %s, %s)',
                 (name, email, hashed_password)
             )
             conn.commit()
+            cur.close()
             conn.close()
             flash('Account created successfully! Please login.', 'success')
             return redirect(url_for('login'))
@@ -66,9 +85,10 @@ def login():
         email = request.form['email']
         password = request.form['password']
         conn = get_db()
-        user = conn.execute(
-            'SELECT * FROM users WHERE email = ?', (email,)
-        ).fetchone()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM users WHERE email = %s', (email,))
+        user = cur.fetchone()
+        cur.close()
         conn.close()
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
@@ -131,23 +151,17 @@ Keep it simple, practical and helpful for an Indian farmer."""
                 },
                 json={
                     'model': 'meta/llama-3.1-70b-instruct',
-                    'messages': [
-                        {
-                            'role': 'user',
-                            'content': prompt
-                        }
-                    ],
+                    'messages': [{'role': 'user', 'content': prompt}],
                     'max_tokens': 800,
                     'temperature': 0.3
                 },
-                timeout=60
+                timeout=120
             )
             data = response.json()
             if 'choices' in data and len(data['choices']) > 0:
                 result = data['choices'][0]['message']['content']
             else:
                 result = 'ERROR: ' + str(data)
-
         except Exception as e:
             result = "ERROR: " + str(e)
 
@@ -290,16 +304,8 @@ Keep response practical and helpful for an Indian farmer."""
                             {
                                 'role': 'user',
                                 'content': [
-                                    {
-                                        'type': 'text',
-                                        'text': prompt
-                                    },
-                                    {
-                                        'type': 'image_url',
-                                        'image_url': {
-                                            'url': f'data:image/jpeg;base64,{image_base64}'
-                                        }
-                                    }
+                                    {'type': 'text', 'text': prompt},
+                                    {'type': 'image_url', 'image_url': {'url': f'data:image/jpeg;base64,{image_base64}'}}
                                 ]
                             }
                         ],
@@ -308,37 +314,18 @@ Keep response practical and helpful for an Indian farmer."""
                     },
                     timeout=60
                 )
-
                 data = response.json()
-
                 if 'choices' in data and len(data['choices']) > 0:
-                    ai_response = data['choices'][0]['message']['content']
-                    result = {
-                        'status': 'success',
-                        'analysis': ai_response
-                    }
+                    result = {'status': 'success', 'analysis': data['choices'][0]['message']['content']}
                 elif 'error' in data:
-                    result = {
-                        'status': 'error',
-                        'message': str(data['error'])
-                    }
+                    result = {'status': 'error', 'message': str(data['error'])}
                 else:
-                    result = {
-                        'status': 'error',
-                        'message': 'Raw response: ' + str(data)
-                    }
-
+                    result = {'status': 'error', 'message': 'Raw response: ' + str(data)}
             except Exception as e:
-                result = {
-                    'status': 'error',
-                    'message': str(e)
-                }
+                result = {'status': 'error', 'message': str(e)}
 
     return render_template('ai_detector.html', result=result)
 
-# ------------------------------------------------
-# MARKET PRICE ADVISOR
-# ------------------------------------------------
 @app.route('/market', methods=['GET', 'POST'])
 def market():
     if 'user_id' not in session:
@@ -384,13 +371,8 @@ Be specific to Indian markets. Keep it brief."""
                 },
                 json={
                     'model': 'meta/llama-3.1-70b-instruct',
-                    'messages': [
-                        {
-                            'role': 'user',
-                            'content': prompt
-                        }
-                    ],
-                    'max_tokens': 1024,
+                    'messages': [{'role': 'user', 'content': prompt}],
+                    'max_tokens': 800,
                     'temperature': 0.3
                 },
                 timeout=120
@@ -400,7 +382,6 @@ Be specific to Indian markets. Keep it brief."""
                 result = data['choices'][0]['message']['content']
             else:
                 result = 'ERROR: ' + str(data)
-
         except Exception as e:
             result = "ERROR: " + str(e)
 
@@ -418,7 +399,6 @@ def weather():
         weather_url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric'
         response = req.get(weather_url, timeout=10)
         data = response.json()
-
         if data.get('cod') == 200:
             weather_data = {
                 'city': data['name'],
@@ -435,9 +415,85 @@ def weather():
             return json.dumps({'success': True, 'data': weather_data})
         else:
             return json.dumps({'error': 'City not found'})
-
     except Exception as e:
         return json.dumps({'error': str(e)})
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM users WHERE email = %s', (email,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if user:
+            token = secrets.token_urlsafe(32)
+            reset_tokens[token] = email
+            reset_url = url_for('reset_password', token=token, _external=True)
+            try:
+                msg = Message(
+                    subject='Krishi Margadarshak - Password Reset',
+                    recipients=[email],
+                    body=f'''Hello {user['name']},
+
+You requested a password reset for your Krishi Margadarshak account.
+
+Click this link to reset your password:
+{reset_url}
+
+This link expires when the server restarts.
+
+If you did not request this, please ignore this email.
+
+- Krishi Margadarshak Team'''
+                )
+                mail.send(msg)
+                flash('Password reset link sent to your email!', 'success')
+            except Exception as e:
+                flash('Error sending email: ' + str(e), 'danger')
+        else:
+            flash('No account found with that email.', 'danger')
+
+        return redirect(url_for('forgot_password'))
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if token not in reset_tokens:
+        flash('Invalid or expired reset link.', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        new_password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if new_password != confirm_password:
+            flash('Passwords do not match!', 'danger')
+            return redirect(url_for('reset_password', token=token))
+
+        if len(new_password) < 6:
+            flash('Password must be at least 6 characters!', 'danger')
+            return redirect(url_for('reset_password', token=token))
+
+        email = reset_tokens[token]
+        hashed_password = generate_password_hash(new_password)
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'UPDATE users SET password = %s WHERE email = %s',
+            (hashed_password, email)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        del reset_tokens[token]
+        flash('Password reset successfully! Please login.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html', token=token)
 
 @app.route('/logout')
 def logout():

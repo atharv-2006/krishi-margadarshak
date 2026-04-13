@@ -4,3 +4,5 @@ requests
 python-dotenv
 pillow
 gunicorn
+psycopg2-binary
+flask-mail
