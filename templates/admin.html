@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+
+<h2 class="text-success mb-4">📊 Admin Analytics Panel</h2>
+
+<div class="row">
+
+<div class="col-md-3 mb-4">
+<div class="card shadow text-center p-4">
+<h2>👥</h2>
+<h4>{{ total_users }}</h4>
+<p>Total Users</p>
+</div>
+</div>
+
+<div class="col-md-3 mb-4">
+<div class="card shadow text-center p-4">
+<h2>🌱</h2>
+<h4>{{ crop_total }}</h4>
+<p>Crop Searches</p>
+</div>
+</div>
+
+<div class="col-md-3 mb-4">
+<div class="card shadow text-center p-4">
+<h2>📈</h2>
+<h4>{{ market_total }}</h4>
+<p>Market Queries</p>
+</div>
+</div>
+
+<div class="col-md-3 mb-4">
+<div class="card shadow text-center p-4">
+<h2>🤖</h2>
+<h4>{{ disease_total }}</h4>
+<p>Disease Reports</p>
+</div>
+</div>
+
+</div>
+
+<div class="card shadow p-4 mt-3">
+
+<h4 class="text-success mb-3">🆕 Latest Users</h4>
+
+<table class="table table-bordered">
+
+<tr>
+<th>Name</th>
+<th>Email</th>
+</tr>
+
+{% for user in latest_users %}
+<tr>
+<td>{{ user.name }}</td>
+<td>{{ user.email }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+</div>
+
+{% endblock %}

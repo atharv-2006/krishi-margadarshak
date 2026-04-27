@@ -2,150 +2,273 @@
 
 {% block content %}
 
-<!-- Welcome Banner -->
-<div class="alert alert-success text-center mt-3">
-    <h4>🎉 Welcome, {{ name }}!</h4>
-    <p>You are now logged in to Krishi Margadarshak.</p>
+<style>
+body{
+    background: #f4f8f3;
+}
+
+/* Hero Section */
+.hero-box{
+    background: linear-gradient(135deg,#2e7d32,#43a047);
+    color:white;
+    padding:35px;
+    border-radius:18px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.12);
+    margin-top:20px;
+}
+
+/* Stats Cards */
+.stats-card{
+    border:none;
+    border-radius:16px;
+    transition:0.3s;
+    box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+
+.stats-card:hover{
+    transform:translateY(-5px);
+}
+
+/* Feature Cards */
+.feature-card{
+    border:none;
+    border-radius:18px;
+    transition:0.3s;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+}
+
+.feature-card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 14px 28px rgba(0,0,0,0.12);
+}
+
+.icon-big{
+    font-size:42px;
+}
+
+.btn-green{
+    background:#2e7d32;
+    color:white;
+    border:none;
+}
+
+.btn-green:hover{
+    background:#256b2a;
+    color:white;
+}
+
+.weather-box{
+    border-radius:18px;
+    border:none;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+}
+</style>
+
+<!-- HERO SECTION -->
+<div class="hero-box">
+    <h2>👋 Welcome back, {{ name }}</h2>
+    <p class="mb-0">Smart farming starts here today with Krishi Margadarshak.</p>
 </div>
 
-<!-- WEATHER WIDGET -->
-<div class="card shadow mb-4 p-3">
+<!-- STATS SECTION -->
+<div class="row mt-4">
+
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card text-center p-3">
+            <h2>🌱</h2>
+            <h4>Crop AI</h4>
+            <small class="text-muted">Smart crop suggestions</small>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card text-center p-3">
+            <h2>📈</h2>
+            <h4>Market</h4>
+            <small class="text-muted">Sell at right time</small>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card text-center p-3">
+            <h2>🤖</h2>
+            <h4>Disease AI</h4>
+            <small class="text-muted">Image diagnosis</small>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card text-center p-3">
+            <h2>📄</h2>
+            <h4>History</h4>
+            <small class="text-muted">Track past activity</small>
+        </div>
+    </div>
+
+</div>
+
+<!-- WEATHER -->
+<div class="card weather-box p-4 mt-2">
     <div class="row align-items-center">
 
-        <!-- Weather Search -->
         <div class="col-md-4 mb-3 mb-md-0">
-            <h5 class="text-success fw-bold mb-3">🌤️ Weather Update</h5>
+            <h4 class="text-success mb-3">🌤 Weather Update</h4>
+
             <div class="input-group">
                 <input type="text"
                        id="cityInput"
                        class="form-control"
-                       placeholder="Enter city name..."
+                       placeholder="Enter city..."
                        value="Pune">
-                <button class="btn btn-success" onclick="getWeather()">
+
+                <button class="btn btn-green" onclick="getWeather()">
                     Search
                 </button>
             </div>
         </div>
 
-        <!-- Weather Display -->
         <div class="col-md-8">
             <div id="weatherDisplay">
-                <div class="text-center text-muted">
-                    <p>🔍 Enter your city to see weather</p>
-                </div>
+                <p class="text-muted text-center">Enter city to view weather.</p>
             </div>
         </div>
 
     </div>
 </div>
 
-<!-- Dashboard Cards -->
-<div class="row mt-2">
+<!-- FEATURE CARDS -->
+<div class="row mt-4">
 
-    <!-- Crop Recommendation Card -->
-    <div class="col-md-3 mb-4">
-        <div class="card shadow text-center p-3 h-100">
-            <div class="card-body">
-                <h2>🌱</h2>
-                <h5 class="card-title text-success">Crop Recommendation</h5>
-                <p class="card-text">Get the best crop for your soil and season.</p>
-                <a href="/crop" class="btn btn-success">Go</a>
-            </div>
+    <div class="col-md-4 mb-4">
+        <div class="card feature-card text-center p-4 h-100">
+            <div class="icon-big">🌱</div>
+            <h4 class="text-success mt-2">Crop Recommendation</h4>
+            <p>Get the best crop for your soil and season.</p>
+            <a href="/crop" class="btn btn-green">Open</a>
         </div>
     </div>
 
-    <!-- Government Schemes Card -->
-    <div class="col-md-3 mb-4">
-        <div class="card shadow text-center p-3 h-100">
-            <div class="card-body">
-                <h2>🏛️</h2>
-                <h5 class="card-title text-success">Government Schemes</h5>
-                <p class="card-text">Learn about schemes and benefits for farmers.</p>
-                <a href="/schemes" class="btn btn-success">Go</a>
-            </div>
+    <div class="col-md-4 mb-4">
+        <div class="card feature-card text-center p-4 h-100">
+            <div class="icon-big">📈</div>
+            <h4 class="text-success mt-2">Market Advisor</h4>
+            <p>Get AI advice on selling price and timing.</p>
+            <a href="/market" class="btn btn-green">Open</a>
         </div>
     </div>
 
-    <!-- Market Price Card -->
-    <div class="col-md-3 mb-4">
-        <div class="card shadow text-center p-3 h-100">
-            <div class="card-body">
-                <h2>📈</h2>
-                <h5 class="card-title text-success">Market Advisor</h5>
-                <p class="card-text">Get AI advice on best time and price to sell your crop.</p>
-                <a href="/market" class="btn btn-success">Go</a>
-            </div>
+    <div class="col-md-4 mb-4">
+        <div class="card feature-card text-center p-4 h-100">
+            <div class="icon-big">🤖</div>
+            <h4 class="text-success mt-2">AI Crop Detector</h4>
+            <p>Upload crop photo and detect disease instantly.</p>
+            <a href="/ai-detector" class="btn btn-green">Open</a>
         </div>
     </div>
 
-    <!-- AI Detector Card -->
-    <div class="col-md-3 mb-4">
-        <div class="card shadow text-center p-3 h-100">
-            <div class="card-body">
-                <h2>🤖</h2>
-                <h5 class="card-title text-success">AI Crop Detector</h5>
-                <p class="card-text">Upload a crop photo and get AI-powered disease diagnosis.</p>
-                <a href="/ai-detector" class="btn btn-success">Go</a>
-            </div>
+    <div class="col-md-4 mb-4">
+        <div class="card feature-card text-center p-4 h-100">
+            <div class="icon-big">🏛️</div>
+            <h4 class="text-success mt-2">Govt Schemes</h4>
+            <p>Explore subsidies and farmer benefits.</p>
+            <a href="/schemes" class="btn btn-green">Open</a>
+        </div>
+    </div>
+<div class="col-md-4 mb-4">
+    <div class="card feature-card text-center p-4 h-100">
+        <div class="icon-big">📊</div>
+        <h4 class="text-success mt-2">Admin Panel</h4>
+        <p>View platform users, searches and analytics.</p>
+        <a href="/admin" class="btn btn-green">Open</a>
+    </div>
+</div>
+    <div class="col-md-4 mb-4">
+        <div class="card feature-card text-center p-4 h-100">
+            <div class="icon-big">📄</div>
+            <h4 class="text-success mt-2">My History</h4>
+            <p>See previous crop, market and AI reports.</p>
+            <a href="/history" class="btn btn-green">Open</a>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+    <div class="card feature-card text-center p-4 h-100">
+    <div class="icon-big">📊</div>
+    <h4 class="text-success mt-2">Profit Calculator</h4>
+    <p>Estimate farming cost and expected profit.</p>
+    <a href="/calculator" class="btn btn-green">Open</a>
+    </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card feature-card text-center p-4 h-100">
+            <div class="icon-big">🚪</div>
+            <h4 class="text-danger mt-2">Logout</h4>
+            <p>Securely sign out from your account.</p>
+            <a href="/logout" class="btn btn-outline-danger">Logout</a>
         </div>
     </div>
 
 </div>
 
-<!-- Logout Button -->
-<div class="text-center mt-3">
-    <a href="/logout" class="btn btn-outline-danger">🚪 Logout</a>
-</div>
-
-<!-- Weather JavaScript -->
 <script>
 function getWeather() {
     const city = document.getElementById('cityInput').value;
     const display = document.getElementById('weatherDisplay');
 
-    display.innerHTML = '<div class="text-center"><div class="spinner-border text-success"></div><p class="mt-2 text-muted">Fetching weather...</p></div>';
+    display.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-success"></div>
+            <p class="mt-2 text-muted">Fetching weather...</p>
+        </div>`;
 
     fetch('/weather?city=' + encodeURIComponent(city))
         .then(res => res.json())
         .then(data => {
-            if (data.success) {
+            if(data.success){
                 const w = data.data;
+
                 display.innerHTML = `
-                    <div class="row text-center">
-                        <div class="col-md-3">
-                            <img src="https://openweathermap.org/img/wn/${w.icon}@2x.png"
-                                 style="width:70px">
-                            <p class="fw-bold mb-0">${w.description}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <h2 class="text-success fw-bold">${w.temp}°C</h2>
-                            <small class="text-muted">Feels like ${w.feels_like}°C</small><br>
-                            <small class="text-muted">Min: ${w.min_temp}° Max: ${w.max_temp}°</small>
-                        </div>
-                        <div class="col-md-3">
-                            <p class="mb-1">💧 Humidity</p>
-                            <h5 class="text-success">${w.humidity}%</h5>
-                        </div>
-                        <div class="col-md-3">
-                            <p class="mb-1">🌬️ Wind Speed</p>
-                            <h5 class="text-success">${w.wind_speed} km/h</h5>
-                        </div>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <img src="https://openweathermap.org/img/wn/${w.icon}@2x.png">
+                        <p>${w.description}</p>
                     </div>
-                    <p class="text-center text-muted mt-2 mb-0">
-                        📍 ${w.city}, ${w.country}
-                    </p>
+
+                    <div class="col-md-3">
+                        <h2 class="text-success">${w.temp}°C</h2>
+                        <small>Feels ${w.feels_like}°C</small>
+                    </div>
+
+                    <div class="col-md-3">
+                        <h5>💧 ${w.humidity}%</h5>
+                        <small>Humidity</small>
+                    </div>
+
+                    <div class="col-md-3">
+                        <h5>🌬 ${w.wind_speed} km/h</h5>
+                        <small>Wind</small>
+                    </div>
+                </div>
+
+                <p class="text-center text-muted mt-2">
+                    📍 ${w.city}, ${w.country}
+                </p>
                 `;
             } else {
-                display.innerHTML = `<div class="alert alert-danger">❌ ${data.error} — please check the city name!</div>`;
+                display.innerHTML = `
+                <div class="alert alert-danger">
+                    ${data.error}
+                </div>`;
             }
         })
-        .catch(err => {
-            display.innerHTML = '<div class="alert alert-danger">❌ Could not fetch weather. Check your internet!</div>';
+        .catch(() => {
+            display.innerHTML = `
+            <div class="alert alert-danger">
+                Unable to fetch weather.
+            </div>`;
         });
 }
 
-// Auto load weather on page load
-window.onload = function() {
+window.onload = function(){
     getWeather();
 }
 </script>

@@ -10,6 +10,9 @@ import json
 import requests as req
 import os
 import secrets
+from flask import send_file
+from reportlab.pdfgen import canvas
+import io
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,6 +48,43 @@ def create_tables():
             password TEXT NOT NULL
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS crop_history (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        season TEXT,
+        soil TEXT,
+        water TEXT,
+        budget TEXT,
+        farm_size TEXT,
+        previous_crop TEXT,
+        result TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS market_history (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            crop TEXT,
+            quantity TEXT,
+            location TEXT,
+            quality TEXT,
+            harvest_date TEXT,
+            result TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS disease_history (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            analysis TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     conn.commit()
     cur.close()
     conn.close()
@@ -54,6 +94,133 @@ create_tables()
 @app.route('/')
 def home():
     return render_template('home.html')
+@app.route('/download-history')
+def download_history():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM crop_history WHERE user_id=%s", (session['user_id'],))
+    crop = cur.fetchall()
+
+    cur.execute("SELECT * FROM market_history WHERE user_id=%s", (session['user_id'],))
+    market = cur.fetchall()
+
+    cur.execute("SELECT * FROM disease_history WHERE user_id=%s", (session['user_id'],))
+    disease = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer)
+
+    y = 800
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(180, y, "My History Report")
+    y -= 40
+
+    p.setFont("Helvetica", 10)
+
+    for row in crop:
+        p.drawString(30, y, f"CROP | {row['created_at']} | {row['season']} | {row['soil']}")
+        y -= 20
+
+    for row in market:
+        p.drawString(30, y, f"MARKET | {row['created_at']} | {row['crop']} | {row['location']}")
+        y -= 20
+
+    for row in disease:
+        p.drawString(30, y, f"DISEASE | {row['created_at']}")
+        y -= 20
+
+    p.save()
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="history_report.pdf",
+        mimetype="application/pdf"
+    )
+@app.route('/calculator', methods=['GET', 'POST'])
+def calculator():
+    if 'user_id' not in session:
+        flash('Please login first.', 'warning')
+        return redirect(url_for('login'))
+
+    result = None
+
+    if request.method == 'POST':
+        seeds = float(request.form['seeds'])
+        fertilizer = float(request.form['fertilizer'])
+        labour = float(request.form['labour'])
+        water = float(request.form['water'])
+        other = float(request.form['other'])
+        selling_price = float(request.form['selling_price'])
+        quantity = float(request.form['quantity'])
+
+        total_cost = seeds + fertilizer + labour + water + other
+        revenue = selling_price * quantity
+        profit = revenue - total_cost
+
+        result = {
+            'total_cost': total_cost,
+            'revenue': revenue,
+            'profit': profit
+        }
+
+    return render_template('calculator.html', result=result)
+@app.route('/admin')
+def admin():
+    print(session['user_name'])
+    if 'user_id' not in session:
+        flash('Please login first.', 'warning')
+        return redirect(url_for('login'))
+    if session['user_email'].strip().lower() != 'atharvdeshmukh08@gmail.com':
+        return "Unauthorized", 403
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Total users
+    cur.execute("SELECT COUNT(*) AS total FROM users")
+    total_users = cur.fetchone()['total']
+
+    # Crop searches
+    cur.execute("SELECT COUNT(*) AS total FROM crop_history")
+    crop_total = cur.fetchone()['total']
+
+    # Market queries
+    cur.execute("SELECT COUNT(*) AS total FROM market_history")
+    market_total = cur.fetchone()['total']
+
+    # Disease reports
+    cur.execute("SELECT COUNT(*) AS total FROM disease_history")
+    disease_total = cur.fetchone()['total']
+
+    # Latest users
+    cur.execute("""
+        SELECT name, email
+        FROM users
+        ORDER BY id DESC
+        LIMIT 5
+    """)
+    latest_users = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        'admin.html',
+        total_users=total_users,
+        crop_total=crop_total,
+        market_total=market_total,
+        disease_total=disease_total,
+        latest_users=latest_users
+    )
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -93,6 +260,7 @@ def login():
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
             session['user_name'] = user['name']
+            session['user_email'] = user['email']
             flash('Welcome back, ' + user['name'] + '!', 'success')
             return redirect(url_for('dashboard'))
         else:
@@ -160,6 +328,27 @@ Keep it simple, practical and helpful for an Indian farmer."""
             data = response.json()
             if 'choices' in data and len(data['choices']) > 0:
                 result = data['choices'][0]['message']['content']
+                conn = get_db()
+                cur = conn.cursor()
+
+                cur.execute('''
+                    INSERT INTO crop_history
+                    (user_id, season, soil, water, budget, farm_size, previous_crop, result)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                ''', (
+                    session['user_id'],
+                    season,
+                    soil,
+                    water,
+                    budget,
+                    farm_size,
+                    previous_crop,
+                    result
+                ))
+
+                conn.commit()
+                cur.close()
+                conn.close()
             else:
                 result = 'ERROR: ' + str(data)
         except Exception as e:
@@ -175,7 +364,130 @@ Keep it simple, practical and helpful for an Indian farmer."""
                                previous_crop=previous_crop)
 
     return render_template('crop.html')
+@app.route('/history')
+def history():
+    if 'user_id' not in session:
+        flash('Please login first.', 'warning')
+        return redirect(url_for('login'))
 
+    search = request.args.get('search', '')
+    filter_type = request.args.get('type', 'all')
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    crop_data = []
+    market_data = []
+    disease_data = []
+
+    if filter_type in ['all', 'crop']:
+        cur.execute("""
+            SELECT * FROM crop_history
+            WHERE user_id=%s
+            AND (
+                season ILIKE %s OR
+                soil ILIKE %s OR
+                previous_crop ILIKE %s
+            )
+            ORDER BY created_at DESC
+        """, (
+            session['user_id'],
+            f'%{search}%',
+            f'%{search}%',
+            f'%{search}%'
+        ))
+        crop_data = cur.fetchall()
+
+    if filter_type in ['all', 'market']:
+        cur.execute("""
+            SELECT * FROM market_history
+            WHERE user_id=%s
+            AND (
+                crop ILIKE %s OR
+                location ILIKE %s
+            )
+            ORDER BY created_at DESC
+        """, (
+            session['user_id'],
+            f'%{search}%',
+            f'%{search}%'
+        ))
+        market_data = cur.fetchall()
+
+    if filter_type in ['all', 'disease']:
+        cur.execute("""
+            SELECT * FROM disease_history
+            WHERE user_id=%s
+            AND analysis ILIKE %s
+            ORDER BY created_at DESC
+        """, (
+            session['user_id'],
+            f'%{search}%'
+        ))
+        disease_data = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        'history.html',
+        crop_data=crop_data,
+        market_data=market_data,
+        disease_data=disease_data,
+        search=search,
+        filter_type=filter_type
+    )
+@app.route('/delete-history/<history_type>/<int:record_id>')
+def delete_history(history_type, record_id):
+    if 'user_id' not in session:
+        flash('Please login first.', 'warning')
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    if history_type == 'crop':
+        cur.execute("""
+            DELETE FROM crop_history
+            WHERE id=%s AND user_id=%s
+        """, (record_id, session['user_id']))
+
+    elif history_type == 'market':
+        cur.execute("""
+            DELETE FROM market_history
+            WHERE id=%s AND user_id=%s
+        """, (record_id, session['user_id']))
+
+    elif history_type == 'disease':
+        cur.execute("""
+            DELETE FROM disease_history
+            WHERE id=%s AND user_id=%s
+        """, (record_id, session['user_id']))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    flash("Record deleted successfully.", "success")
+    return redirect(url_for('history'))
+@app.route('/clear-history')
+def clear_history():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM crop_history WHERE user_id=%s", (session['user_id'],))
+    cur.execute("DELETE FROM market_history WHERE user_id=%s", (session['user_id'],))
+    cur.execute("DELETE FROM disease_history WHERE user_id=%s", (session['user_id'],))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    flash("All history cleared.", "success")
+    return redirect(url_for('history'))
 @app.route('/schemes')
 def schemes():
     if 'user_id' not in session:
@@ -317,6 +629,21 @@ Keep response practical and helpful for an Indian farmer."""
                 data = response.json()
                 if 'choices' in data and len(data['choices']) > 0:
                     result = {'status': 'success', 'analysis': data['choices'][0]['message']['content']}
+                    conn = get_db()
+                    cur = conn.cursor()
+
+                    cur.execute('''
+                    INSERT INTO disease_history
+                    (user_id, analysis)
+                    VALUES (%s,%s)
+                    ''', (
+                        session['user_id'],
+                        result['analysis']
+                    ))
+
+                    conn.commit()
+                    cur.close()
+                    conn.close()
                 elif 'error' in data:
                     result = {'status': 'error', 'message': str(data['error'])}
                 else:
@@ -380,6 +707,26 @@ Be specific to Indian markets. Keep it brief."""
             data = response.json()
             if 'choices' in data and len(data['choices']) > 0:
                 result = data['choices'][0]['message']['content']
+                conn = get_db()
+                cur = conn.cursor()
+
+                cur.execute('''
+                INSERT INTO market_history
+                (user_id, crop, quantity, location, quality, harvest_date, result)
+                VALUES (%s,%s,%s,%s,%s,%s,%s)
+                ''', (
+                        session['user_id'],
+                        crop,
+                        quantity,
+                        location,
+                        quality,
+                        harvest_date,
+                        result
+                    ))
+
+                conn.commit()
+                cur.close()
+                conn.close()
             else:
                 result = 'ERROR: ' + str(data)
         except Exception as e:

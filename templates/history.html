@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+
+<h2 class="text-success mb-4">📄 My Full History</h2>
+
+<div class="mb-3 text-end">
+<a href="/clear-history"
+   onclick="return confirm('Clear all history?')"
+   class="btn btn-danger">
+🗑 Clear All History
+</a>
+</div>
+<a href="/download-history"
+   class="btn btn-success">
+📄 Download PDF
+</a>
+
+<form method="GET" class="row mb-4">
+
+<div class="col-md-5">
+<input type="text" name="search"
+       class="form-control"
+       placeholder="Search..."
+       value="{{ search }}">
+</div>
+
+<div class="col-md-4">
+<select name="type" class="form-select">
+<option value="all">All</option>
+<option value="crop">Crop</option>
+<option value="market">Market</option>
+<option value="disease">Disease</option>
+</select>
+</div>
+
+<div class="col-md-3">
+<button class="btn btn-success w-100">Search</button>
+</div>
+
+</form>
+
+<!-- Crop -->
+{% for row in crop_data %}
+<div class="card shadow p-3 mb-3">
+<h5>🌱 Crop Recommendation</h5>
+<p><b>Date:</b> {{ row.created_at }}</p>
+<p>Season: {{ row.season }} | Soil: {{ row.soil }}</p>
+<p>{{ row.result[:250] }}...</p>
+
+<a href="/delete-history/crop/{{ row.id }}"
+   onclick="return confirm('Delete this record?')"
+   class="btn btn-sm btn-outline-danger">
+Delete
+</a>
+</div>
+{% endfor %}
+
+<!-- Market -->
+{% for row in market_data %}
+<div class="card shadow p-3 mb-3">
+<h5>📈 Market Advisor</h5>
+<p><b>Date:</b> {{ row.created_at }}</p>
+<p>Crop: {{ row.crop }} | Location: {{ row.location }}</p>
+<p>{{ row.result[:250] }}...</p>
+
+<a href="/delete-history/market/{{ row.id }}"
+   onclick="return confirm('Delete this record?')"
+   class="btn btn-sm btn-outline-danger">
+Delete
+</a>
+</div>
+{% endfor %}
+
+<!-- Disease -->
+{% for row in disease_data %}
+<div class="card shadow p-3 mb-3">
+<h5>🤖 Disease Report</h5>
+<p><b>Date:</b> {{ row.created_at }}</p>
+<p>{{ row.analysis[:300] }}...</p>
+
+<a href="/delete-history/disease/{{ row.id }}"
+   onclick="return confirm('Delete this record?')"
+   class="btn btn-sm btn-outline-danger">
+Delete
+</a>
+</div>
+{% endfor %}
+
+</div>
+
+{% endblock %}
